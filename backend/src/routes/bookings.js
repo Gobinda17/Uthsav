@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const { Venue, User, AvailabilitySlot, Booking, Payment } = require("../db/models");
 const { serialize } = require("../utils/serialize");
+const { requireAuth } = require("../middleware/auth");
+const { normalizePhone } = require("../utils/phone");
 const router = express.Router();
 
 // POST /api/bookings
@@ -28,10 +30,11 @@ router.post("/", async (req, res, next) => {
     }
 
     // find-or-create the customer (stand-in for OTP auth in production)
-    let user = await User.findOne({ phone: customer.phone }).lean();
+    const customerPhone = normalizePhone(customer.phone);
+    let user = await User.findOne({ phone: customerPhone }).lean();
     if (!user) {
       user = (
-        await User.create({ phone: customer.phone, name: customer.name || "Guest", role: "CUSTOMER" })
+        await User.create({ phone: customerPhone, name: customer.name || "Guest", role: "CUSTOMER" })
       ).toObject();
     }
 
@@ -102,8 +105,9 @@ router.get("/:id", async (req, res, next) => {
 });
 
 // PATCH /api/bookings/:id  { status: "CONFIRMED" | "DECLINED" }
-// Used by the venue owner dashboard to respond to a request.
-router.patch("/:id", async (req, res, next) => {
+// Used by the venue owner dashboard to respond to a request. Only the venue's
+// own owner or an ADMIN may act on a booking.
+router.patch("/:id", requireAuth, async (req, res, next) => {
   try {
     const { status } = req.body;
     if (!["CONFIRMED", "DECLINED", "CANCELLED", "COMPLETED"].includes(status)) {
@@ -115,6 +119,13 @@ router.patch("/:id", async (req, res, next) => {
 
     const booking = await Booking.findById(req.params.id);
     if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+    if (req.user.role !== "ADMIN") {
+      const venue = await Venue.findById(booking.venue_id).select("owner_id").lean();
+      if (req.user.role !== "VENUE_OWNER" || !venue || venue.owner_id.toString() !== req.user.id) {
+        return res.status(403).json({ error: "Not authorized to update this booking" });
+      }
+    }
 
     booking.status = status;
     if (status === "CONFIRMED") booking.confirmed_at = new Date();

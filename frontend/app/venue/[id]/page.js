@@ -274,9 +274,10 @@ function BookingFlow({ venue, availability, onCancel, onDone }) {
           <label className="text-sm font-medium block mb-2 text-ink">Phone number</label>
           <input
             value={phone} onChange={(e) => setPhone(e.target.value)}
-            placeholder="+91XXXXXXXXXX"
-            className="w-full border rounded px-3 py-2 text-sm mb-4 border-line outline-none"
+            placeholder="9000000001"
+            className="w-full border rounded px-3 py-2 text-sm mb-1 border-line outline-none"
           />
+          <p className="text-xs mb-4 text-[#8A7F6C]">+91 is added automatically</p>
           <label className="text-sm font-medium block mb-2 text-ink">Expected guest count</label>
           <input
             type="range" min={venue.capacity[0]} max={venue.capacity[1]} value={guests}

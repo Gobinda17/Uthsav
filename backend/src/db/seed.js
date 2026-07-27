@@ -1,5 +1,9 @@
+const bcrypt = require("bcryptjs");
 const { connectDB, mongoose } = require("./index");
 const { User, Venue, AvailabilitySlot, Booking, Payment, Review } = require("./models");
+
+const DEMO_OWNER_PASSWORD = "password123";
+const DEMO_ADMIN_PASSWORD = "admin123";
 
 async function main() {
   await connectDB();
@@ -14,11 +18,21 @@ async function main() {
     User.deleteMany({}),
   ]);
 
+  const ownerPasswordHash = await bcrypt.hash(DEMO_OWNER_PASSWORD, 10);
+  const adminPasswordHash = await bcrypt.hash(DEMO_ADMIN_PASSWORD, 10);
+
   const [owner1, owner2, owner3] = await User.create([
-    { phone: "+919000000001", name: "Anup Baruah", role: "VENUE_OWNER" },
-    { phone: "+919000000002", name: "Rekha Gogoi", role: "VENUE_OWNER" },
-    { phone: "+919000000003", name: "The Orchid Grand Mgmt", role: "VENUE_OWNER" },
+    { phone: "+919000000001", name: "Anup Baruah", role: "VENUE_OWNER", password_hash: ownerPasswordHash },
+    { phone: "+919000000002", name: "Rekha Gogoi", role: "VENUE_OWNER", password_hash: ownerPasswordHash },
+    { phone: "+919000000003", name: "The Orchid Grand Mgmt", role: "VENUE_OWNER", password_hash: ownerPasswordHash },
   ]);
+
+  const admin = await User.create({
+    phone: "+919876543210",
+    name: "Uthsav Admin",
+    role: "ADMIN",
+    password_hash: adminPasswordHash,
+  });
 
   const [cust1, cust2, cust3] = await User.create([
     { phone: "+919100000001", name: "Rima Baruah", role: "CUSTOMER" },
@@ -130,8 +144,13 @@ async function main() {
     },
   ]);
 
-  console.log(`Seeded ${venues.length} venues, 6 users, 3 bookings.`);
+  console.log(`Seeded ${venues.length} venues, 7 users, 3 bookings.`);
   console.log(`Riverside venue id (for owner dashboard demo): ${riverside._id}`);
+  console.log("\nDemo login credentials:");
+  console.log(`  Owner  — phone ${owner1.phone}, password ${DEMO_OWNER_PASSWORD}`);
+  console.log(`  Owner  — phone ${owner2.phone}, password ${DEMO_OWNER_PASSWORD}`);
+  console.log(`  Owner  — phone ${owner3.phone}, password ${DEMO_OWNER_PASSWORD}`);
+  console.log(`  Admin  — phone ${admin.phone}, password ${DEMO_ADMIN_PASSWORD}`);
 
   await mongoose.disconnect();
 }
