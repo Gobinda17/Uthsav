@@ -1,9 +1,9 @@
 require("dotenv").config();
-require("./db"); // boots the SQLite file + schema on startup
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 
+const { connectDB } = require("./db");
 const venuesRouter = require("./routes/venues");
 const bookingsRouter = require("./routes/bookings");
 const ownerRouter = require("./routes/owner");
@@ -30,6 +30,13 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Uthsav backend running on http://localhost:${PORT}`);
-});
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Uthsav backend running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB:", err.message);
+    process.exit(1);
+  });

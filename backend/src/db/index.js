@@ -1,15 +1,17 @@
-const path = require("path");
-const fs = require("fs");
-const Database = require("better-sqlite3");
+const mongoose = require("mongoose");
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, "..", "..", "dev.db");
-const db = new Database(DB_PATH);
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/uthsav";
 
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+mongoose.connection.on("connected", () => {
+  console.log(`MongoDB connected: ${mongoose.connection.name}`);
+});
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB connection error:", err.message);
+});
 
-// Run schema on boot — idempotent (CREATE TABLE IF NOT EXISTS)
-const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
-db.exec(schema);
+async function connectDB() {
+  await mongoose.connect(MONGODB_URI);
+  return mongoose.connection;
+}
 
-module.exports = db;
+module.exports = { mongoose, connectDB };
