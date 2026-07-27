@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #FAF6EE;
+  color: #1C2620;
+}
+
+/* Signature element: a woven "gamosa" border motif used as a divider */
+.gamosa-rule {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.gamosa-rule span {
+  width: 5px;
+  height: 5px;
+  background: #A63A2E;
+  transform: rotate(45deg);
+  display: inline-block;
+}
+.gamosa-rule span:nth-child(3n) {
+  opacity: 0.25;
+}
